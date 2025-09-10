@@ -1,115 +1,71 @@
-#!/bin/bash
-#
-# -----------------------------------------------------------------------------
-#            TUTORIAL DE INSTALAÇÃO E CONFIGURAÇÃO DO ZABBIX AGENT 2
-# -----------------------------------------------------------------------------
-#
-# OBJETIVO:
-# Este script serve como um guia documentado para instalar e configurar o
-# Zabbix Agent 2 em um sistema Debian.
-#
-# INSTRUÇÕES:
-# NÃO EXECUTE ESTE SCRIPT DIRETAMENTE.
-# Ele contém comandos administrativos e de configuração. Leia os comentários
-# e copie e cole os blocos de comando em seu terminal para executar cada etapa.
-#
-# -----------------------------------------------------------------------------
+# Tutorial de Instalação e Configuração do Zabbix Agent2 no Debian
 
-echo "### INÍCIO DO TUTORIAL - ZABBIX AGENT 2 ###"
+## Passo 1: Acessar o servidor
+Conecte-se ao servidor via SSH utilizando seu usuário administrador.
 
-# --- ETAPA 1: PREPARAÇÃO DO AMBIENTE ---
-# Para instalar pacotes e editar arquivos de sistema, é necessário ter
-# privilégios de superusuário (root).
-#
-# Copie o comando abaixo:
-# -----------------------------------------------------------------------------
+```bash
+ssh admin@portal10.contactfy.cloud
 sudo su -
+```
 
+---
 
-# --- ETAPA 2: INSTALAÇÃO DO ZABBIX AGENT 2 ---
-# Utilize o gerenciador de pacotes 'apt' para instalar o agente.
-#
-# Copie o comando abaixo:
-# -----------------------------------------------------------------------------
+## Passo 2: Instalar o Zabbix Agent2
+
+```bash
 apt install zabbix-agent2
+```
 
+Durante a instalação, o serviço será registrado e habilitado automaticamente.
 
-# --- ETAPA 3: CONFIGURAÇÃO DO AGENTE ---
-# O bloco de comandos a seguir irá:
-#   1. Navegar para o diretório de configuração.
-#   2. Fazer um backup do arquivo de configuração original.
-#   3. Criar um novo arquivo de configuração limpo, sem comentários.
-#   4. Apontar o agente para o IP do seu servidor Zabbix.
-#   5. Definir o Hostname que o servidor Zabbix espera.
-#   6. Ajustar parâmetros de Timeout e Debug.
-#   7. Habilitar, reiniciar e verificar o status do serviço.
-#
-# ATENÇÃO: No comando 'sed' abaixo, altere '172.31.248.244' para o IP
-# do seu Zabbix Server e 'portal1' para o hostname exato do seu host
-# conforme cadastrado no Zabbix.
-#
-# Copie o bloco inteiro de uma vez e cole no seu terminal:
-# -----------------------------------------------------------------------------
+---
+
+## Passo 3: Configuração do Zabbix Agent2
+
+Acesse a pasta de configuração e edite o arquivo do agente:
+
+```bash
 cd /etc/zabbix/
 
 mv zabbix_agent2.conf zabbix_agent2.conf.original
-
 echo "##### Zabbix Agent #####" >> /etc/zabbix/zabbix_agent2.conf
-
 cat zabbix_agent2.conf.original | grep -Ev '^#|^$' >> zabbix_agent2.conf
-
 sed -i 's/127.0.0.1/172.31.248.244/g' /etc/zabbix/zabbix_agent2.conf
-
 sed -i 's/Zabbix server/portal1/g' /etc/zabbix/zabbix_agent2.conf
-
 echo "Timeout=15" >> /etc/zabbix/zabbix_agent2.conf
-
 echo "DebugLevel=3" >> /etc/zabbix/zabbix_agent2.conf
+```
 
-systemctl enable zabbix-agent2
+---
 
-systemctl restart zabbix-agent2
+## Passo 4: Configurar Firewall
 
-systemctl status zabbix-agent2.service
+Se o **firewalld** estiver ativo, libere a porta **10050/tcp**:
 
-
-# --- ETAPA 4: VERIFICAÇÃO E DIAGNÓSTICO (LOGS) ---
-# O passo mais importante após configurar é verificar os logs em tempo real
-# para identificar erros de comunicação.
-#
-# Copie o comando abaixo e observe a saída. Pressione Ctrl+C para sair.
-# -----------------------------------------------------------------------------
-tail -f /var/log/zabbix/zabbix_agent2.log
-
-
-# --- ETAPA 5: CONFIGURAÇÃO DO FIREWALL ---
-# Se os logs mostrarem erros de conexão, é provável que um firewall esteja
-# bloqueando a porta 10050. Os comandos abaixo verificam o status do
-# firewalld e abrem a porta necessária.
-#
-# Copie os comandos um por um ou em bloco:
-# -----------------------------------------------------------------------------
-systemctl status firewalld.service
-
+```bash
 firewall-cmd --permanent --add-port=10050/tcp
-
 firewall-cmd --reload
-
 firewall-cmd --list-ports
+```
 
+---
 
-# --- ETAPA 6: REINICIALIZAÇÃO FINAL E VERIFICAÇÃO ---
-# Após alterar o firewall, reinicie o agente e verifique os logs novamente
-# para confirmar que a comunicação foi estabelecida com sucesso.
-#
-# Copie os comandos abaixo:
-# -----------------------------------------------------------------------------
-systemctl restart zabbix-agent2.service
+## Passo 5: Ativar e Reiniciar o Serviço
 
+```bash
+systemctl enable zabbix-agent2
+systemctl restart zabbix-agent2
 systemctl status zabbix-agent2.service
+```
 
+---
+
+## Passo 6: Validar Logs
+
+Verifique se o agente iniciou corretamente e está se comunicando com o servidor Zabbix:
+
+```bash
 tail -f /var/log/zabbix/zabbix_agent2.log
+```
 
-
-# --- FIM DO TUTORIAL ---
-echo "### Tutorial finalizado. Verifique os logs para confirmar o sucesso. ###"
+Se aparecer a mensagem **`host not found`**, confirme se o host foi cadastrado corretamente no Zabbix Server com o mesmo nome configurado no `zabbix_agent2.conf`.
