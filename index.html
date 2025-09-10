@@ -50,7 +50,6 @@
                 <h1 class="text-xl font-bold text-gray-700">Tutoriais</h1>
                 <div class="flex gap-2">
                     <button id="home-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-3 rounded-lg transition duration-200" title="Voltar ao início">🏠</button>
-                    <button id="add-tutorial-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-lg transition duration-200" title="Adicionar tutorial">➕</button>
                 </div>
             </div>
             <div id="tutorials-list" class="flex-grow overflow-y-auto">
@@ -78,18 +77,6 @@
             <!-- Visualizador -->
             <div id="content-viewer" class="prose max-w-none markdown-content hidden"></div>
 
-            <!-- Formulário -->
-            <div id="add-tutorial-form" class="hidden">
-                <h2 class="text-3xl font-bold mb-6">Adicionar Novo Tutorial</h2>
-                <div class="space-y-4">
-                    <input type="text" id="tutorial-title" placeholder="Título do Tutorial" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <textarea id="tutorial-content" placeholder="Escreva seu tutorial aqui em formato Markdown..." class="w-full p-3 h-96 border border-gray-300 rounded-lg font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
-                    <div>
-                        <button id="save-tutorial-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200">Salvar Tutorial</button>
-                        <button id="cancel-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 ml-2">Cancelar</button>
-                    </div>
-                </div>
-            </div>
         </main>
     </div>
 
@@ -99,16 +86,10 @@
         // Elementos DOM
         const tutorialsListEl = document.getElementById('tutorials-list');
         const contentViewerEl = document.getElementById('content-viewer');
-        const addTutorialFormEl = document.getElementById('add-tutorial-form');
         const homeViewEl = document.getElementById('home-view');
         const tutorialCardsGridEl = document.getElementById('tutorial-cards-grid');
         const loadingMessageEl = document.getElementById('loading-message');
-        const addTutorialBtn = document.getElementById('add-tutorial-btn');
         const homeBtnEl = document.getElementById('home-btn');
-        const saveTutorialBtn = document.getElementById('save-tutorial-btn');
-        const cancelBtn = document.getElementById('cancel-btn');
-        const tutorialTitleInput = document.getElementById('tutorial-title');
-        const tutorialContentInput = document.getElementById('tutorial-content');
 
         // Conversor Markdown
         const markdownConverter = new showdown.Converter();
@@ -206,19 +187,6 @@ tail -f /var/log/zabbix/zabbix_agent2.log
         function showHome() {
             homeViewEl.classList.remove('hidden');
             contentViewerEl.classList.add('hidden');
-            addTutorialFormEl.classList.add('hidden');
-            
-            document.querySelectorAll('#tutorials-list div').forEach(el => el.classList.remove('bg-blue-100'));
-            activeTutorialId = null;
-        }
-
-        function showAddForm() {
-            homeViewEl.classList.add('hidden');
-            contentViewerEl.classList.add('hidden');
-            addTutorialFormEl.classList.remove('hidden');
-            
-            tutorialTitleInput.value = '';
-            tutorialContentInput.value = '';
             
             document.querySelectorAll('#tutorials-list div').forEach(el => el.classList.remove('bg-blue-100'));
             activeTutorialId = null;
@@ -226,7 +194,6 @@ tail -f /var/log/zabbix/zabbix_agent2.log
 
         function showViewer() {
             homeViewEl.classList.add('hidden');
-            addTutorialFormEl.classList.add('hidden');
             contentViewerEl.classList.remove('hidden');
         }
 
@@ -292,9 +259,12 @@ tail -f /var/log/zabbix/zabbix_agent2.log
                     <div class="flex-grow">
                         <div class="flex items-center justify-between mb-2">
                             <h3 class="text-lg font-semibold text-gray-800">${tutorial.title}</h3>
+                            <!-- Badge removido - se quiser mostrar novamente, descomente a linha abaixo -->
+                            <!--
                             <span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
                                 📁 Local
                             </span>
+                            -->
                         </div>
                         <p class="text-gray-600 text-sm mb-4">${tutorial.description}</p>
                         <div class="flex items-center text-xs text-gray-500">
@@ -330,7 +300,8 @@ tail -f /var/log/zabbix/zabbix_agent2.log
                 titleEl.className = 'font-medium';
                 
                 const sourceEl = document.createElement('div');
-                sourceEl.textContent = '📁 Local';
+                // sourceEl.textContent = '📁 Local'; // Badge removido da sidebar
+                sourceEl.textContent = '📖 Tutorial'; // Texto alternativo mais limpo
                 sourceEl.className = 'text-xs text-gray-500 mt-1';
                 
                 div.appendChild(titleEl);
@@ -369,61 +340,13 @@ tail -f /var/log/zabbix/zabbix_agent2.log
 
         // Event Listeners
         homeBtnEl.addEventListener('click', showHome);
-        addTutorialBtn.addEventListener('click', showAddForm);
-        cancelBtn.addEventListener('click', showHome);
-        
-        saveTutorialBtn.addEventListener('click', () => {
-            const title = tutorialTitleInput.value.trim();
-            const content = tutorialContentInput.value.trim();
-
-            if (!title || !content) {
-                alert("Por favor, preencha o título e o conteúdo do tutorial.");
-                return;
-            }
-
-            // Adicionar novo tutorial
-            const newTutorial = {
-                id: 'tutorial-' + Date.now(),
-                title: title,
-                content: content,
-                description: content.split('\n')[0].replace('#', '').trim() || 'Tutorial personalizado',
-                source: 'local'
-            };
-            
-            tutorials.push(newTutorial);
-            
-            // Salvar no localStorage
-            localStorage.setItem('tutorials', JSON.stringify(tutorials));
-            
-            showHome();
-            renderTutorialsList(tutorials);
-            renderTutorialCards(tutorials);
-            
-            alert('Tutorial salvo com sucesso!');
-        });
 
         // Inicializar aplicação
         function init() {
             console.log('📚 Inicializando biblioteca...');
             
-            // Carregar tutorials do localStorage
-            try {
-                const savedTutorials = localStorage.getItem('tutorials');
-                if (savedTutorials) {
-                    const parsed = JSON.parse(savedTutorials);
-                    tutorials.push(...parsed);
-                }
-            } catch (e) {
-                console.log('Nenhum tutorial salvo encontrado');
-            }
-            
-            // Sempre incluir tutorial de exemplo
-            tutorials.unshift(tutorialExemplo);
-            
-            // Remover duplicatas
-            tutorials = tutorials.filter((tutorial, index, self) => 
-                index === self.findIndex(t => t.id === tutorial.id)
-            );
+            // Incluir tutorial de exemplo
+            tutorials.push(tutorialExemplo);
             
             console.log(`✅ ${tutorials.length} tutorial(is) carregado(s)`);
             
@@ -442,9 +365,8 @@ tail -f /var/log/zabbix/zabbix_agent2.log
             init();
         }
 
-        // Expor funções globalmente
+        // Expor funções globalmente para debug
         window.showHome = showHome;
-        window.showAddForm = showAddForm;
         window.displayTutorial = displayTutorial;
         
         console.log('🎉 Biblioteca de Tutoriais carregada!');
