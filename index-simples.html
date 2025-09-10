@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca de Tutoriais</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .markdown-content h1 { font-size: 2.25rem; font-weight: 700; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
+        .markdown-content h2 { font-size: 1.875rem; font-weight: 600; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
+        .markdown-content h3 { font-size: 1.5rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 1rem; }
+        .markdown-content p { margin-bottom: 1rem; line-height: 1.6; }
+        .markdown-content a { color: #3b82f6; text-decoration: underline; }
+        .markdown-content ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1rem; }
+        .markdown-content ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 1rem; }
+        .markdown-content li { margin-bottom: 0.5rem; }
+        .markdown-content code {
+            background-color: #1e293b; color: #e2e8f0; padding: 0.2rem 0.4rem; border-radius: 0.25rem;
+            font-family: 'Courier New', Courier, monospace; font-size: 0.9em;
+        }
+        .markdown-content pre {
+            background-color: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem;
+            overflow-x: auto; margin-bottom: 1rem; position: relative;
+        }
+        .markdown-content pre code { background-color: transparent; padding: 0; color: inherit; }
+        .markdown-content strong { font-weight: 700; }
+        .copy-btn {
+            position: absolute; top: 0.5rem; right: 0.5rem; background-color: #334155;
+            color: #94a3b8; border: none; padding: 0.25rem 0.5rem; border-radius: 0.25rem;
+            cursor: pointer; font-size: 0.8rem; transition: background-color 0.2s;
+        }
+        .copy-btn:hover { background-color: #475569; }
+        .tutorial-card {
+            transition: all 0.3s ease; border: 1px solid #e2e8f0;
+        }
+        .tutorial-card:hover {
+            transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); border-color: #3b82f6;
+        }
+        .tutorial-icon { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <div id="app" class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-1/4 bg-white border-r border-gray-200 flex flex-col">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h1 class="text-xl font-bold text-gray-700">Tutoriais</h1>
+                <div class="flex gap-2">
+                    <button id="home-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-3 rounded-lg transition duration-200" title="Voltar ao início">🏠</button>
+                    <button id="add-tutorial-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-lg transition duration-200" title="Adicionar tutorial">➕</button>
+                </div>
+            </div>
+            <div id="tutorials-list" class="flex-grow overflow-y-auto">
+                <!-- Lista de tutoriais -->
+            </div>
+        </aside>
+
+        <!-- Área principal -->
+        <main class="w-3/4 p-8 overflow-y-auto bg-gray-50">
+            <!-- Tela inicial -->
+            <div id="home-view" class="block">
+                <div class="mb-8">
+                    <h1 class="text-4xl font-bold text-gray-800 mb-2">📚 Biblioteca de Tutoriais</h1>
+                    <p class="text-gray-600 text-lg">Encontre e acesse todos os tutoriais disponíveis</p>
+                </div>
+                <div id="tutorial-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Cartões serão inseridos aqui -->
+                </div>
+                <div id="loading-message" class="text-center py-12" style="display: block;">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p class="text-gray-500">Carregando tutoriais...</p>
+                </div>
+            </div>
+
+            <!-- Visualizador -->
+            <div id="content-viewer" class="prose max-w-none markdown-content hidden"></div>
+
+            <!-- Formulário -->
+            <div id="add-tutorial-form" class="hidden">
+                <h2 class="text-3xl font-bold mb-6">Adicionar Novo Tutorial</h2>
+                <div class="space-y-4">
+                    <input type="text" id="tutorial-title" placeholder="Título do Tutorial" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <textarea id="tutorial-content" placeholder="Escreva seu tutorial aqui em formato Markdown..." class="w-full p-3 h-96 border border-gray-300 rounded-lg font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    <div>
+                        <button id="save-tutorial-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200">Salvar Tutorial</button>
+                        <button id="cancel-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 ml-2">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        console.log('🚀 Iniciando Biblioteca de Tutoriais...');
+        
+        // Elementos DOM
+        const tutorialsListEl = document.getElementById('tutorials-list');
+        const contentViewerEl = document.getElementById('content-viewer');
+        const addTutorialFormEl = document.getElementById('add-tutorial-form');
+        const homeViewEl = document.getElementById('home-view');
+        const tutorialCardsGridEl = document.getElementById('tutorial-cards-grid');
+        const loadingMessageEl = document.getElementById('loading-message');
+        const addTutorialBtn = document.getElementById('add-tutorial-btn');
+        const homeBtnEl = document.getElementById('home-btn');
+        const saveTutorialBtn = document.getElementById('save-tutorial-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const tutorialTitleInput = document.getElementById('tutorial-title');
+        const tutorialContentInput = document.getElementById('tutorial-content');
+
+        // Conversor Markdown
+        const markdownConverter = new showdown.Converter();
+        markdownConverter.setOption('ghCompatibleHeaderId', true);
+        markdownConverter.setOption('simpleLineBreaks', true);
+        markdownConverter.setOption('tables', true);
+
+        // Dados
+        let tutorials = [];
+        let activeTutorialId = null;
+
+        // Tutorial de exemplo (sempre disponível)
+        const tutorialExemplo = {
+            id: 'zabbix-agent',
+            title: 'Instalação e Configuração do Zabbix Agent2 no Debian',
+            content: `# 🚀 Tutorial de Instalação e Configuração do Zabbix Agent2 no Debian
+
+## 🔑 Passo 1: Acessar o servidor
+Conecte-se ao servidor via SSH utilizando seu usuário administrador.
+
+\`\`\`bash
+sudo su -
+\`\`\`
+
+## 📦 Passo 2: Instalar o Zabbix Agent2
+
+\`\`\`bash
+apt install zabbix-agent2
+\`\`\`
+
+Durante a instalação, o serviço será registrado e habilitado automaticamente.
+
+## ⚙️ Passo 3: Configuração do Zabbix Agent2
+
+Acesse a pasta de configuração:
+
+\`\`\`bash
+cd /etc/zabbix/
+\`\`\`
+
+Liste o conteúdo da pasta:
+\`\`\`bash
+ls
+\`\`\`
+
+Exiba o nome do Host:
+\`\`\`bash
+hostname
+\`\`\`
+
+Substitua "NOME DO HOST" no comando abaixo pelo nome do host que aparece após o comando anterior:
+
+\`\`\`bash
+cd /etc/zabbix/
+mv zabbix_agent2.conf zabbix_agent2.conf.original
+echo "##### Zabbix Agent #####" >> /etc/zabbix/zabbix_agent2.conf
+cat zabbix_agent2.conf.original | grep -Ev '^#|^$' >> zabbix_agent2.conf
+sed -i 's/127.0.0.1/172.31.248.244/g' /etc/zabbix/zabbix_agent2.conf
+sed -i 's/Zabbix server/NOME DO HOST/g' /etc/zabbix/zabbix_agent2.conf
+echo "Timeout=15" >> /etc/zabbix/zabbix_agent2.conf
+echo "DebugLevel=3" >> /etc/zabbix/zabbix_agent2.conf
+
+systemctl enable zabbix-agent2
+systemctl restart zabbix-agent2
+systemctl status zabbix-agent2.service
+\`\`\`
+
+## 🔥 Passo 4: Configurar Firewall
+
+Verificar o status do Firewall:
+\`\`\`bash
+systemctl status firewalld.service
+\`\`\`
+
+Se o **firewalld** estiver ativo, libere a porta **10050/tcp**:
+
+\`\`\`bash
+firewall-cmd --permanent --add-port=10050/tcp
+firewall-cmd --reload
+\`\`\`
+
+## ✅ Conclusão
+
+O Zabbix Agent2 está agora instalado e configurado! 
+
+Para verificar se tudo está funcionando:
+\`\`\`bash
+tail -f /var/log/zabbix/zabbix_agent2.log
+\`\`\``,
+            description: 'Aprenda a instalar e configurar o Zabbix Agent2 no Debian de forma completa e segura.',
+            source: 'local'
+        };
+
+        // Funções de navegação
+        function showHome() {
+            homeViewEl.classList.remove('hidden');
+            contentViewerEl.classList.add('hidden');
+            addTutorialFormEl.classList.add('hidden');
+            
+            document.querySelectorAll('#tutorials-list div').forEach(el => el.classList.remove('bg-blue-100'));
+            activeTutorialId = null;
+        }
+
+        function showAddForm() {
+            homeViewEl.classList.add('hidden');
+            contentViewerEl.classList.add('hidden');
+            addTutorialFormEl.classList.remove('hidden');
+            
+            tutorialTitleInput.value = '';
+            tutorialContentInput.value = '';
+            
+            document.querySelectorAll('#tutorials-list div').forEach(el => el.classList.remove('bg-blue-100'));
+            activeTutorialId = null;
+        }
+
+        function showViewer() {
+            homeViewEl.classList.add('hidden');
+            addTutorialFormEl.classList.add('hidden');
+            contentViewerEl.classList.remove('hidden');
+        }
+
+        // Função para exibir tutorial
+        function displayTutorial(tutorial) {
+            try {
+                const htmlContent = markdownConverter.makeHtml(tutorial.content);
+                contentViewerEl.innerHTML = htmlContent;
+                showViewer();
+
+                // Adicionar botões de cópia
+                contentViewerEl.querySelectorAll('pre').forEach(pre => {
+                    const code = pre.querySelector('code');
+                    if (code) {
+                        const copyButton = document.createElement('button');
+                        copyButton.innerText = 'Copiar';
+                        copyButton.className = 'copy-btn';
+                        copyButton.onclick = async () => {
+                            try {
+                                if (navigator.clipboard && window.isSecureContext) {
+                                    await navigator.clipboard.writeText(code.innerText);
+                                } else {
+                                    const textArea = document.createElement('textarea');
+                                    textArea.value = code.innerText;
+                                    document.body.appendChild(textArea);
+                                    textArea.select();
+                                    document.execCommand('copy');
+                                    document.body.removeChild(textArea);
+                                }
+                                copyButton.innerText = 'Copiado!';
+                                setTimeout(() => { copyButton.innerText = 'Copiar'; }, 2000);
+                            } catch (err) {
+                                copyButton.innerText = 'Erro!';
+                                setTimeout(() => { copyButton.innerText = 'Copiar'; }, 2000);
+                            }
+                        };
+                        pre.appendChild(copyButton);
+                    }
+                });
+            } catch (error) {
+                console.error('Erro ao exibir tutorial:', error);
+                contentViewerEl.innerHTML = '<p class="text-red-500">Erro ao carregar tutorial.</p>';
+            }
+        }
+
+        // Criar cartão de tutorial
+        function createTutorialCard(tutorial) {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'tutorial-card bg-white rounded-lg shadow-md p-6 cursor-pointer';
+            
+            let emoji = '📚';
+            const title = tutorial.title.toLowerCase();
+            if (title.includes('zabbix')) emoji = '📊';
+            else if (title.includes('instalação')) emoji = '⚙️';
+            else if (title.includes('configuração')) emoji = '🔧';
+            else if (title.includes('servidor')) emoji = '🖥️';
+            
+            cardEl.innerHTML = `
+                <div class="flex items-start space-x-4">
+                    <div class="tutorial-icon flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl">
+                        ${emoji}
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-lg font-semibold text-gray-800">${tutorial.title}</h3>
+                            <span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
+                                📁 Local
+                            </span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">${tutorial.description}</p>
+                        <div class="flex items-center text-xs text-gray-500">
+                            📖 Tutorial completo
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            cardEl.onclick = () => {
+                activeTutorialId = tutorial.id;
+                displayTutorial(tutorial);
+                renderTutorialsList(tutorials);
+            };
+            
+            return cardEl;
+        }
+
+        // Renderizar lista na sidebar
+        function renderTutorialsList(tutorialsList) {
+            tutorialsListEl.innerHTML = '';
+            if (tutorialsList.length === 0) {
+                tutorialsListEl.innerHTML = '<p class="p-4 text-gray-500 text-sm">Nenhum tutorial encontrado.</p>';
+                return;
+            }
+            
+            tutorialsList.forEach(tutorial => {
+                const div = document.createElement('div');
+                div.className = `p-4 cursor-pointer hover:bg-gray-100 border-b border-gray-200 ${tutorial.id === activeTutorialId ? 'bg-blue-100' : ''}`;
+                
+                const titleEl = document.createElement('div');
+                titleEl.textContent = tutorial.title;
+                titleEl.className = 'font-medium';
+                
+                const sourceEl = document.createElement('div');
+                sourceEl.textContent = '📁 Local';
+                sourceEl.className = 'text-xs text-gray-500 mt-1';
+                
+                div.appendChild(titleEl);
+                div.appendChild(sourceEl);
+                
+                div.onclick = () => {
+                    activeTutorialId = tutorial.id;
+                    displayTutorial(tutorial);
+                    renderTutorialsList(tutorials);
+                };
+                
+                tutorialsListEl.appendChild(div);
+            });
+        }
+
+        // Renderizar cartões
+        function renderTutorialCards(tutorialsList) {
+            tutorialCardsGridEl.innerHTML = '';
+            
+            if (tutorialsList.length === 0) {
+                tutorialCardsGridEl.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <div class="text-6xl mb-4">📚</div>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">Nenhum tutorial encontrado</h3>
+                        <p class="text-gray-500">Adicione seu primeiro tutorial clicando no botão '+' acima.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            tutorialsList.forEach(tutorial => {
+                const cardEl = createTutorialCard(tutorial);
+                tutorialCardsGridEl.appendChild(cardEl);
+            });
+        }
+
+        // Event Listeners
+        homeBtnEl.addEventListener('click', showHome);
+        addTutorialBtn.addEventListener('click', showAddForm);
+        cancelBtn.addEventListener('click', showHome);
+        
+        saveTutorialBtn.addEventListener('click', () => {
+            const title = tutorialTitleInput.value.trim();
+            const content = tutorialContentInput.value.trim();
+
+            if (!title || !content) {
+                alert("Por favor, preencha o título e o conteúdo do tutorial.");
+                return;
+            }
+
+            // Adicionar novo tutorial
+            const newTutorial = {
+                id: 'tutorial-' + Date.now(),
+                title: title,
+                content: content,
+                description: content.split('\n')[0].replace('#', '').trim() || 'Tutorial personalizado',
+                source: 'local'
+            };
+            
+            tutorials.push(newTutorial);
+            
+            // Salvar no localStorage
+            localStorage.setItem('tutorials', JSON.stringify(tutorials));
+            
+            showHome();
+            renderTutorialsList(tutorials);
+            renderTutorialCards(tutorials);
+            
+            alert('Tutorial salvo com sucesso!');
+        });
+
+        // Inicializar aplicação
+        function init() {
+            console.log('📚 Inicializando biblioteca...');
+            
+            // Carregar tutorials do localStorage
+            try {
+                const savedTutorials = localStorage.getItem('tutorials');
+                if (savedTutorials) {
+                    const parsed = JSON.parse(savedTutorials);
+                    tutorials.push(...parsed);
+                }
+            } catch (e) {
+                console.log('Nenhum tutorial salvo encontrado');
+            }
+            
+            // Sempre incluir tutorial de exemplo
+            tutorials.unshift(tutorialExemplo);
+            
+            // Remover duplicatas
+            tutorials = tutorials.filter((tutorial, index, self) => 
+                index === self.findIndex(t => t.id === tutorial.id)
+            );
+            
+            console.log(`✅ ${tutorials.length} tutorial(is) carregado(s)`);
+            
+            // Renderizar interface
+            renderTutorialsList(tutorials);
+            renderTutorialCards(tutorials);
+            loadingMessageEl.style.display = 'none';
+            
+            console.log('✅ Biblioteca inicializada com sucesso!');
+        }
+
+        // Inicializar quando DOM estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // Expor funções globalmente
+        window.showHome = showHome;
+        window.showAddForm = showAddForm;
+        window.displayTutorial = displayTutorial;
+        
+        console.log('🎉 Biblioteca de Tutoriais carregada!');
+    </script>
+</body>
+</html>
