@@ -7,16 +7,12 @@ Conecte-se ao servidor via SSH utilizando seu usuário administrador.
 sudo su -
 ```
 
----
-
 ## 📦 Passo 2: Instalar o Zabbix Agent2
 
 ```bash
 apt install zabbix-agent2
 ```
 Durante a instalação, o serviço será registrado e habilitado automaticamente.
-
----
 
 ## ⚙️ Passo 3: Configuração do Zabbix Agent2
 
@@ -63,8 +59,6 @@ tail -f /var/log/zabbix/zabbix_agent2.log
 
 Caso o FireWall esteja atrapalhando o agente, siga para os seguintes passo. Caso contrário, terminamos por aqui.
 
----
-
 ## 🔥 Passo 5: Configurar Firewall
 
 Verifica o status do Firewall
@@ -98,8 +92,6 @@ Lista todas as portas novamente para confirmar a nova porta
 firewall-cmd --list-ports
 ```
 
----
-
 ## ✅ Passo 6: Ativar e Reiniciar o Serviço
 
 ```bash
@@ -110,8 +102,6 @@ Verifica o status do Serviço
 ```bash
 systemctl status zabbix-agent2.service
 ```
-
----
 
 ## 📜 Passo 7: Validar Logs
 
